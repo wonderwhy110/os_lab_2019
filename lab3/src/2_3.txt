@@ -1,0 +1,2 @@
+./parallel_min_max --seed 123  --array_size 10000000 --pnum 1 --by_files
+./parallel_min_max --seed 123  --array_size 10000000 --pnum 1 
