@@ -6,14 +6,9 @@
 #include <getopt.h>
 #include <pthread.h>
 
-#include "utils.h"  // для GenerateArray
+#include "../../lab3/src/utils.h"  // для GenerateArray
 #include "sum_lib.h" // наша библиотека для суммирования
 
-struct SumArgs {
-  int *array;
-  int begin;
-  int end;
-};
 
 void *ThreadSum(void *args) {
   struct SumArgs *sum_args = (struct SumArgs *)args;
