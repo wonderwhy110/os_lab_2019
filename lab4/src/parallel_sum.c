@@ -17,7 +17,8 @@ struct SumArgs {
 
 void *ThreadSum(void *args) {
   struct SumArgs *sum_args = (struct SumArgs *)args;
-  return (void *)(size_t)Sum(sum_args);
+  long long result = Sum(sum_args);
+  return (void *)(long)result;  // Для 64-битных систем
 }
 
 int main(int argc, char **argv) {
@@ -90,13 +91,12 @@ int main(int argc, char **argv) {
   }
 
   // Сбор результатов
-  int total_sum = 0;
-  for (uint32_t i = 0; i < threads_num; i++) {
-    int sum = 0;
-    pthread_join(threads[i], (void **)&sum);
-    total_sum += sum;
-  }
-
+  long long total_sum = 0;
+for (uint32_t i = 0; i < threads_num; i++) {
+  long long sum = 0;
+  pthread_join(threads[i], (void **)&sum);
+  total_sum += sum;
+}
   // Конец замера времени
   struct timeval finish_time;
   gettimeofday(&finish_time, NULL);
