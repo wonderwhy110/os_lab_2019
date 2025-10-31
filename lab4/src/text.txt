@@ -1,0 +1,22 @@
+gcc -Wall -Wextra -std=c99 -pthread   -o parallel_sum parallel_sum.c sum_lib.c ../../lab3/src/utils.c
+parallel_sum.c:12:8: error: redefinition of ‘struct SumArgs’
+   12 | struct SumArgs {
+      |        ^~~~~~~
+In file included from parallel_sum.c:10:
+sum_lib.h:4:8: note: originally defined here
+    4 | struct SumArgs {
+      |        ^~~~~~~
+parallel_sum.c: In function ‘ThreadSum’:
+parallel_sum.c:20:30: warning: passing argument 1 of ‘Sum’ from incompatible pointer type [-Wincompatible-pointer-types]
+   20 |   return (void *)(size_t)Sum(sum_args);
+      |                              ^~~~~~~~
+      |                              |
+      |                              struct SumArgs *
+sum_lib.h:10:31: note: expected ‘const struct SumArgs *’ but argument is of type ‘struct SumArgs *’
+   10 | int Sum(const struct SumArgs *args);
+      |         ~~~~~~~~~~~~~~~~~~~~~~^~~~
+../../lab3/src/utils.c: In function ‘GenerateArray’:
+../../lab3/src/utils.c:7:21: warning: comparison of integer expressions of different signedness: ‘int’ and ‘unsigned int’ [-Wsign-compare]
+    7 |   for (int i = 0; i < array_size; i++) {
+      |                     ^
+make: *** [Makefile:18: parallel_sum] Ошибка 1
