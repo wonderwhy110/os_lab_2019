@@ -7,6 +7,6 @@ struct SumArgs {
   int end;
 };
 
-int Sum(const struct SumArgs *args);
+long long Sum(const struct SumArgs *args);
 
 #endif
