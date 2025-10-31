@@ -7,7 +7,7 @@ all: parallel_min_max process_memory
 
 # Программа из lab3 - просто компилируем без зависимостей
 parallel_min_max:
-	$(CC) $(CFLAGS) -o $@ ../lab3/src/parallel_min_max.c ../lab3/src/find_min_max.c ../lab3/src/utils.c
+	$(CC) $(CFLAGS) -o $@ ../../lab3/src/parallel_min_max.c ../../lab3/src/find_min_max.c ../../lab3/src/utils.c
 
 # Программа из lab4
 process_memory:
