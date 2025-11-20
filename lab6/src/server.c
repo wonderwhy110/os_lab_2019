@@ -28,17 +28,14 @@ uint64_t MultModulo(uint64_t a, uint64_t b, uint64_t mod) {
     a = (a * 2) % mod;
     b /= 2;
   }
-
   return result % mod;
 }
 
 uint64_t Factorial(const struct FactorialArgs *args) {
   uint64_t ans = 1;
-
   for (uint64_t i = args->begin; i <= args->end; i++) {
     ans = MultModulo(ans, i, args->mod);
   }
-
   return ans;
 }
 
@@ -55,44 +52,23 @@ int main(int argc, char **argv) {
 
   while (true) {
     int current_optind = optind ? optind : 1;
-
     static struct option options[] = {{"port", required_argument, 0, 0},
                                       {"tnum", required_argument, 0, 0},
                                       {0, 0, 0, 0}};
-
     int option_index = 0;
     int c = getopt_long(argc, argv, "", options, &option_index);
 
-    if (c == -1)
-      break;
+    if (c == -1) break;
 
     switch (c) {
-    case 0: {
-      switch (option_index) {
       case 0:
-        port = atoi(optarg);
-        if (port <= 0) {
-          fprintf(stderr, "Port must be positive number\n");
-          return 1;
+        switch (option_index) {
+          case 0: port = atoi(optarg); break;
+          case 1: tnum = atoi(optarg); break;
+          default: printf("Index %d is out of options\n", option_index);
         }
         break;
-      case 1:
-        tnum = atoi(optarg);
-        if (tnum <= 0) {
-          fprintf(stderr, "Thread number must be positive\n");
-          return 1;
-        }
-        break;
-      default:
-        printf("Index %d is out of options\n", option_index);
-      }
-    } break;
-
-    case '?':
-      printf("Unknown argument\n");
-      break;
-    default:
-      fprintf(stderr, "getopt returned character code 0%o?\n", c);
+      default: fprintf(stderr, "getopt returned character code 0%o?\n", c);
     }
   }
 
@@ -142,50 +118,41 @@ int main(int argc, char **argv) {
     while (true) {
       unsigned int buffer_size = sizeof(uint64_t) * 3;
       char from_client[buffer_size];
-      int read_bytes = recv(client_fd, from_client, buffer_size, 0);
+      int read = recv(client_fd, from_client, buffer_size, 0);
 
-      if (read_bytes == 0)
-        break;
-      if (read_bytes < 0) {
+      if (!read) break;
+      if (read < 0) {
         fprintf(stderr, "Client read failed\n");
         break;
       }
-      if (read_bytes < buffer_size) {
+      if (read < buffer_size) {
         fprintf(stderr, "Client send wrong data format\n");
         break;
       }
 
       pthread_t threads[tnum];
-
-      uint64_t begin = 0;
-      uint64_t end = 0;
-      uint64_t mod = 0;
+      uint64_t begin = 0, end = 0, mod = 0;
       memcpy(&begin, from_client, sizeof(uint64_t));
       memcpy(&end, from_client + sizeof(uint64_t), sizeof(uint64_t));
       memcpy(&mod, from_client + 2 * sizeof(uint64_t), sizeof(uint64_t));
 
       fprintf(stdout, "Receive: %lu %lu %lu\n", begin, end, mod);
 
-      if (begin > end) {
-        fprintf(stderr, "Invalid range: begin > end\n");
-        break;
-      }
-
       struct FactorialArgs args[tnum];
-      uint64_t step = (end - begin + 1) / tnum;
-      uint64_t remainder = (end - begin + 1) % tnum;
+      uint64_t range = end - begin + 1;
+      uint64_t step = range / tnum;
+      uint64_t remainder = range % tnum;
       uint64_t current = begin;
 
       for (uint32_t i = 0; i < tnum; i++) {
         args[i].begin = current;
         args[i].end = current + step - 1 + (i < remainder ? 1 : 0);
         args[i].mod = mod;
-        
         current = args[i].end + 1;
 
         if (pthread_create(&threads[i], NULL, ThreadFactorial, (void *)&args[i])) {
           fprintf(stderr, "Error: pthread_create failed!\n");
-          break;
+          return 1;
         }
       }
 
@@ -214,6 +181,5 @@ int main(int argc, char **argv) {
     close(client_fd);
   }
 
-  close(server_fd);
   return 0;
 }
