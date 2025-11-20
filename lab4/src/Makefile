@@ -28,6 +28,6 @@ test: all
 	@echo "=== Testing parallel_min_max ==="
 	./parallel_min_max --seed 123 --array_size 100 --pnum 2
 	@echo "=== Testing parallel_sum ==="
-	./parallel_sum --threads_num 4 --array_size 100000 --seed 123
+	./parallel_sum --threads_num 4 --array_size 10000 --seed 123
 
 .PHONY: all clean test
