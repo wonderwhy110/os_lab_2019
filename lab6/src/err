@@ -1,22 +1,33 @@
-dasha@dasha-VirtualBox:~/projects/os_lab_2019/lab6/src$ make
+make
 gcc -Wall -Wextra -std=gnu99 -pedantic -c client.c -o client.o
-client.c: In function ‘main’:
-client.c:228:25: warning: comparison of integer expressions of different signedness: ‘int’ and ‘uint64_t’ {aka ‘long unsigned int’} [-Wsign-compare]
-  228 |     uint64_t extra = (i < remainder) ? 1 : 0;
-      |                         ^
-gcc -Wall -Wextra -std=gnu99 -pedantic -o client client.o -lpthread
-gcc -Wall -Wextra -std=gnu99 -pedantic -c server.c -o server.o
-server.c: In function ‘main’:
-server.c:54:9: warning: unused variable ‘current_optind’ [-Wunused-variable]
-   54 |     int current_optind = optind ? optind : 1;
-      |         ^~~~~~~~~~~~~~
-server.c:128:16: warning: comparison of integer expressions of different signedness: ‘int’ and ‘unsigned int’ [-Wsign-compare]
-  128 |       if (read < buffer_size) {
-      |                ^
-server.c:147:30: warning: comparison of integer expressions of different signedness: ‘uint32_t’ {aka ‘unsigned int’} and ‘int’ [-Wsign-compare]
-  147 |       for (uint32_t i = 0; i < tnum; i++) {
-      |                              ^
-server.c:160:30: warning: comparison of integer expressions of different signedness: ‘uint32_t’ {aka ‘unsigned int’} and ‘int’ [-Wsign-compare]
-  160 |       for (uint32_t i = 0; i < tnum; i++) {
-      |                              ^
-gcc -Wall -Wextra -std=gnu99 -pedantic -o server server.o -lpthread
+gcc -Wall -Wextra -std=gnu99 -pedantic -c common.c -o common.o
+In file included from common.c:1:
+common.h:7:1: error: unknown type name ‘bool’
+    7 | bool ConvertStringToUI64(const char *str, uint64_t *val);
+      | ^~~~
+common.h:5:1: note: ‘bool’ is defined in header ‘<stdbool.h>’; did you forget to ‘#include <stdbool.h>’?
+    4 | #include <stdint.h>
+  +++ |+#include <stdbool.h>
+    5 | 
+common.c:17:1: error: unknown type name ‘bool’
+   17 | bool ConvertStringToUI64(const char *str, uint64_t *val) {
+      | ^~~~
+common.c:4:1: note: ‘bool’ is defined in header ‘<stdbool.h>’; did you forget to ‘#include <stdbool.h>’?
+    3 | #include <stdlib.h>
+  +++ |+#include <stdbool.h>
+    4 | 
+common.c: In function ‘ConvertStringToUI64’:
+common.c:21:12: error: ‘false’ undeclared (first use in this function)
+   21 |     return false;
+      |            ^~~~~
+common.c:21:12: note: ‘false’ is defined in header ‘<stdbool.h>’; did you forget to ‘#include <stdbool.h>’?
+common.c:21:12: note: each undeclared identifier is reported only once for each function it appears in
+common.c:28:10: error: ‘true’ undeclared (first use in this function)
+   28 |   return true;
+      |          ^~~~
+common.c:28:10: note: ‘true’ is defined in header ‘<stdbool.h>’; did you forget to ‘#include <stdbool.h>’?
+common.c:29:1: warning: control reaches end of non-void function [-Wreturn-type]
+   29 | }
+      | ^
+make: *** [makefile:42: common.o] Ошибка 1
+
