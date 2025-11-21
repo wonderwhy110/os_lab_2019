@@ -14,6 +14,8 @@
 #include <pthread.h>
 #include <arpa/inet.h>
 
+#include "common.h"  // Добавляем заголовок библиотеки
+
 struct Server {
   char ip[255];
   int port;
@@ -27,33 +29,9 @@ struct ThreadData {
   uint64_t result;
 };
 
-uint64_t MultModulo(uint64_t a, uint64_t b, uint64_t mod) {
-  uint64_t result = 0;
-  a = a % mod;
-  while (b > 0) {
-    if (b % 2 == 1)
-      result = (result + a) % mod;
-    a = (a * 2) % mod;
-    b /= 2;
-  }
+// Функция MultModulo теперь в common.c
 
-  return result % mod;
-}
-
-bool ConvertStringToUI64(const char *str, uint64_t *val) {
-  char *end = NULL;
-  unsigned long long i = strtoull(str, &end, 10);
-  if (errno == ERANGE) {
-    fprintf(stderr, "Out of uint64_t range: %s\n", str);
-    return false;
-  }
-
-  if (errno != 0)
-    return false;
-
-  *val = i;
-  return true;
-}
+// Функция ConvertStringToUI64 теперь в common.c
 
 void* ServerThread(void* arg) {
   struct ThreadData* data = (struct ThreadData*)arg;
@@ -218,7 +196,6 @@ int main(int argc, char **argv) {
     thread_data[i].server = servers[i];
     thread_data[i].begin = current;
     
-    // ИСПРАВЛЕНИЕ: приведение типов
     uint64_t extra = ((uint64_t)i < remainder) ? 1 : 0;
     thread_data[i].end = current + numbers_per_server - 1 + extra;
     thread_data[i].mod = mod;
