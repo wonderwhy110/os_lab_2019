@@ -1,0 +1,22 @@
+dasha@dasha-VirtualBox:~/projects/os_lab_2019/lab6/src$ make
+gcc -Wall -Wextra -std=gnu99 -pedantic -c client.c -o client.o
+client.c: In function ‘main’:
+client.c:228:25: warning: comparison of integer expressions of different signedness: ‘int’ and ‘uint64_t’ {aka ‘long unsigned int’} [-Wsign-compare]
+  228 |     uint64_t extra = (i < remainder) ? 1 : 0;
+      |                         ^
+gcc -Wall -Wextra -std=gnu99 -pedantic -o client client.o -lpthread
+gcc -Wall -Wextra -std=gnu99 -pedantic -c server.c -o server.o
+server.c: In function ‘main’:
+server.c:54:9: warning: unused variable ‘current_optind’ [-Wunused-variable]
+   54 |     int current_optind = optind ? optind : 1;
+      |         ^~~~~~~~~~~~~~
+server.c:128:16: warning: comparison of integer expressions of different signedness: ‘int’ and ‘unsigned int’ [-Wsign-compare]
+  128 |       if (read < buffer_size) {
+      |                ^
+server.c:147:30: warning: comparison of integer expressions of different signedness: ‘uint32_t’ {aka ‘unsigned int’} and ‘int’ [-Wsign-compare]
+  147 |       for (uint32_t i = 0; i < tnum; i++) {
+      |                              ^
+server.c:160:30: warning: comparison of integer expressions of different signedness: ‘uint32_t’ {aka ‘unsigned int’} and ‘int’ [-Wsign-compare]
+  160 |       for (uint32_t i = 0; i < tnum; i++) {
+      |                              ^
+gcc -Wall -Wextra -std=gnu99 -pedantic -o server server.o -lpthread
