@@ -69,7 +69,6 @@ void* ServerThread(void* arg) {
   server_addr.sin_family = AF_INET;
   server_addr.sin_port = htons(data->server.port);
   
-  // ИСПРАВЛЕНИЕ: правильное копирование IP адреса
   if (hostname->h_addr_list[0] != NULL) {
     memcpy(&server_addr.sin_addr.s_addr, hostname->h_addr_list[0], hostname->h_length);
   } else {
@@ -170,14 +169,12 @@ int main(int argc, char **argv) {
     }
   }
 
-  // ИСПРАВЛЕНИЕ: правильная проверка на пустую строку
   if (k == 0 || mod == 0 || servers_file_empty) {
     fprintf(stderr, "Using: %s --k 1000 --mod 5 --servers /path/to/file\n",
             argv[0]);
     return 1;
   }
 
-  // Read servers from file
   FILE* file = fopen(servers_file, "r");
   if (file == NULL) {
     fprintf(stderr, "Cannot open servers file: %s\n", servers_file);
@@ -189,7 +186,6 @@ int main(int argc, char **argv) {
   char line[255];
   
   while (fgets(line, sizeof(line), file) != NULL && servers_num < 100) {
-    // Удаляем символ новой строки
     line[strcspn(line, "\n")] = 0;
     
     char* colon = strchr(line, ':');
@@ -211,11 +207,9 @@ int main(int argc, char **argv) {
 
   printf("Found %d servers\n", servers_num);
 
-  // Create threads for each server
   pthread_t threads[servers_num];
   struct ThreadData thread_data[servers_num];
 
-  // ИСПРАВЛЕНИЕ: правильное распределение диапазонов
   uint64_t numbers_per_server = k / servers_num;
   uint64_t remainder = k % servers_num;
   uint64_t current = 1;
@@ -224,8 +218,8 @@ int main(int argc, char **argv) {
     thread_data[i].server = servers[i];
     thread_data[i].begin = current;
     
-    // ИСПРАВЛЕНИЕ: убрано сравнение разных типов
-    uint64_t extra = (i < remainder) ? 1 : 0;
+    // ИСПРАВЛЕНИЕ: приведение типов
+    uint64_t extra = ((uint64_t)i < remainder) ? 1 : 0;
     thread_data[i].end = current + numbers_per_server - 1 + extra;
     thread_data[i].mod = mod;
     thread_data[i].result = 0;
@@ -240,7 +234,6 @@ int main(int argc, char **argv) {
     }
   }
 
-  // Wait for all threads to complete
   uint64_t total_result = 1;
   for (int i = 0; i < servers_num; i++) {
     pthread_join(threads[i], NULL);
