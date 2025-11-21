@@ -12,6 +12,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <pthread.h>
+#include <arpa/inet.h>
 
 struct Server {
   char ip[255];
@@ -67,7 +68,15 @@ void* ServerThread(void* arg) {
   struct sockaddr_in server_addr;
   server_addr.sin_family = AF_INET;
   server_addr.sin_port = htons(data->server.port);
-  server_addr.sin_addr.s_addr = *((unsigned long *)hostname->h_addr);
+  
+  // ИСПРАВЛЕНИЕ: правильное копирование IP адреса
+  if (hostname->h_addr_list[0] != NULL) {
+    memcpy(&server_addr.sin_addr.s_addr, hostname->h_addr_list[0], hostname->h_length);
+  } else {
+    fprintf(stderr, "No address found for %s\n", data->server.ip);
+    data->result = 0;
+    return NULL;
+  }
 
   int sck = socket(AF_INET, SOCK_STREAM, 0);
   if (sck < 0) {
@@ -112,13 +121,12 @@ void* ServerThread(void* arg) {
 }
 
 int main(int argc, char **argv) {
-  uint64_t k = -1;
-  uint64_t mod = -1;
+  uint64_t k = 0;
+  uint64_t mod = 0;
   char servers_file[255] = {'\0'};
+  int servers_file_empty = 1;
 
   while (true) {
-    int current_optind = optind ? optind : 1;
-
     static struct option options[] = {{"k", required_argument, 0, 0},
                                       {"mod", required_argument, 0, 0},
                                       {"servers", required_argument, 0, 0},
@@ -147,6 +155,7 @@ int main(int argc, char **argv) {
         break;
       case 2:
         strncpy(servers_file, optarg, sizeof(servers_file) - 1);
+        servers_file_empty = 0;
         break;
       default:
         printf("Index %d is out of options\n", option_index);
@@ -161,7 +170,8 @@ int main(int argc, char **argv) {
     }
   }
 
-  if (k == -1 || mod == -1 || !strlen(servers_file)) {
+  // ИСПРАВЛЕНИЕ: правильная проверка на пустую строку
+  if (k == 0 || mod == 0 || servers_file_empty) {
     fprintf(stderr, "Using: %s --k 1000 --mod 5 --servers /path/to/file\n",
             argv[0]);
     return 1;
@@ -179,12 +189,17 @@ int main(int argc, char **argv) {
   char line[255];
   
   while (fgets(line, sizeof(line), file) != NULL && servers_num < 100) {
+    // Удаляем символ новой строки
+    line[strcspn(line, "\n")] = 0;
+    
     char* colon = strchr(line, ':');
     if (colon != NULL) {
       *colon = '\0';
       strncpy(servers[servers_num].ip, line, sizeof(servers[servers_num].ip) - 1);
       servers[servers_num].port = atoi(colon + 1);
-      servers_num++;
+      if (servers[servers_num].port > 0) {
+        servers_num++;
+      }
     }
   }
   fclose(file);
@@ -200,6 +215,7 @@ int main(int argc, char **argv) {
   pthread_t threads[servers_num];
   struct ThreadData thread_data[servers_num];
 
+  // ИСПРАВЛЕНИЕ: правильное распределение диапазонов
   uint64_t numbers_per_server = k / servers_num;
   uint64_t remainder = k % servers_num;
   uint64_t current = 1;
@@ -207,7 +223,10 @@ int main(int argc, char **argv) {
   for (int i = 0; i < servers_num; i++) {
     thread_data[i].server = servers[i];
     thread_data[i].begin = current;
-    thread_data[i].end = current + numbers_per_server - 1 + (i < remainder ? 1 : 0);
+    
+    // ИСПРАВЛЕНИЕ: убрано сравнение разных типов
+    uint64_t extra = (i < remainder) ? 1 : 0;
+    thread_data[i].end = current + numbers_per_server - 1 + extra;
     thread_data[i].mod = mod;
     thread_data[i].result = 0;
 
