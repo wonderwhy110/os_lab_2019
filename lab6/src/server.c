@@ -12,6 +12,7 @@
 #include <sys/types.h>
 
 #include "pthread.h"
+#include "common.h"  // Добавляем заголовок библиотеки
 
 struct FactorialArgs {
   uint64_t begin;
@@ -19,17 +20,7 @@ struct FactorialArgs {
   uint64_t mod;
 };
 
-uint64_t MultModulo(uint64_t a, uint64_t b, uint64_t mod) {
-  uint64_t result = 0;
-  a = a % mod;
-  while (b > 0) {
-    if (b % 2 == 1)
-      result = (result + a) % mod;
-    a = (a * 2) % mod;
-    b /= 2;
-  }
-  return result % mod;
-}
+// Функция MultModulo теперь в common.c
 
 uint64_t Factorial(const struct FactorialArgs *args) {
   uint64_t ans = 1;
@@ -51,7 +42,6 @@ int main(int argc, char **argv) {
   int port = -1;
 
   while (true) {
-    // ИСПРАВЛЕНИЕ: убрана неиспользуемая переменная
     static struct option options[] = {{"port", required_argument, 0, 0},
                                       {"tnum", required_argument, 0, 0},
                                       {0, 0, 0, 0}};
@@ -125,7 +115,6 @@ int main(int argc, char **argv) {
         fprintf(stderr, "Client read failed\n");
         break;
       }
-      // ИСПРАВЛЕНИЕ: приведение типов
       if ((unsigned int)read_bytes < buffer_size) {
         fprintf(stderr, "Client send wrong data format\n");
         break;
@@ -145,7 +134,6 @@ int main(int argc, char **argv) {
       uint64_t remainder = range % tnum;
       uint64_t current = begin;
 
-      // ИСПРАВЛЕНИЕ: изменение типа счетчика
       for (int i = 0; i < tnum; i++) {
         args[i].begin = current;
         args[i].end = current + step - 1 + (i < (int)remainder ? 1 : 0);
