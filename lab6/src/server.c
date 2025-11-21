@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
   int port = -1;
 
   while (true) {
-    int current_optind = optind ? optind : 1;
+    // ИСПРАВЛЕНИЕ: убрана неиспользуемая переменная
     static struct option options[] = {{"port", required_argument, 0, 0},
                                       {"tnum", required_argument, 0, 0},
                                       {0, 0, 0, 0}};
@@ -118,14 +118,15 @@ int main(int argc, char **argv) {
     while (true) {
       unsigned int buffer_size = sizeof(uint64_t) * 3;
       char from_client[buffer_size];
-      int read = recv(client_fd, from_client, buffer_size, 0);
+      int read_bytes = recv(client_fd, from_client, buffer_size, 0);
 
-      if (!read) break;
-      if (read < 0) {
+      if (read_bytes == 0) break;
+      if (read_bytes < 0) {
         fprintf(stderr, "Client read failed\n");
         break;
       }
-      if (read < buffer_size) {
+      // ИСПРАВЛЕНИЕ: приведение типов
+      if ((unsigned int)read_bytes < buffer_size) {
         fprintf(stderr, "Client send wrong data format\n");
         break;
       }
@@ -144,9 +145,10 @@ int main(int argc, char **argv) {
       uint64_t remainder = range % tnum;
       uint64_t current = begin;
 
-      for (uint32_t i = 0; i < tnum; i++) {
+      // ИСПРАВЛЕНИЕ: изменение типа счетчика
+      for (int i = 0; i < tnum; i++) {
         args[i].begin = current;
-        args[i].end = current + step - 1 + (i < remainder ? 1 : 0);
+        args[i].end = current + step - 1 + (i < (int)remainder ? 1 : 0);
         args[i].mod = mod;
         current = args[i].end + 1;
 
@@ -157,7 +159,7 @@ int main(int argc, char **argv) {
       }
 
       uint64_t total = 1;
-      for (uint32_t i = 0; i < tnum; i++) {
+      for (int i = 0; i < tnum; i++) {
         uint64_t *result = NULL;
         pthread_join(threads[i], (void **)&result);
         if (result != NULL) {
