@@ -3,13 +3,16 @@
 #include <pthread.h>
 #include <string.h>
 #include <unistd.h>
+#include <semaphore.h>
 
 // Глобальные переменные
 int k = 0;
 int pnum = 1;
 int mod = 1;
 unsigned long long result = 1;
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+
+// Семафоры
+sem_t semaphore;
 
 // Функция для обработки аргументов командной строки
 void parse_args(int argc, char *argv[]) {
@@ -39,17 +42,18 @@ void* calculate_partial_factorial(void* arg) {
     printf("Thread %d: calculating from %d to %d\n", 
            data->thread_id, data->start, data->end);
     
+    // Вычисление частичного факториала
     for (int i = data->start; i <= data->end; i++) {
         partial_result = (partial_result * i) % mod;
     }
     
-    // Захватываем мьютекс для обновления общего результата
-    pthread_mutex_lock(&mutex);
-    result = (result * partial_result) % mod;
-    pthread_mutex_unlock(&mutex);
-    
     printf("Thread %d: partial result = %llu\n", 
            data->thread_id, partial_result);
+    
+    // Захватываем семафор для обновления общего результата
+    sem_wait(&semaphore);
+    result = (result * partial_result) % mod;
+    sem_post(&semaphore);
     
     return NULL;
 }
@@ -66,6 +70,12 @@ int main(int argc, char *argv[]) {
     }
     
     printf("Calculating %d! mod %d using %d threads\n", k, mod, pnum);
+    
+    // Инициализация семафора (1 - бинарный семафор)
+    if (sem_init(&semaphore, 0, 1) != 0) {
+        perror("sem_init");
+        return 1;
+    }
     
     // Создание потоков
     pthread_t threads[pnum];
@@ -107,8 +117,8 @@ int main(int argc, char *argv[]) {
     // Вывод результата
     printf("\nFinal result: %d! mod %d = %llu\n", k, mod, result);
     
-    // Уничтожение мьютекса
-    pthread_mutex_destroy(&mutex);
+    // Уничтожение семафора
+    sem_destroy(&semaphore);
     
     return 0;
 }
