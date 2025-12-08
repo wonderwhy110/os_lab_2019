@@ -102,6 +102,48 @@ void* ServerThread(void* arg) {
   close(sck);
   return NULL;
 }
+int parse_ipv6_server(const char* line, struct Server* server) {
+  char line_copy[255];
+  strncpy(line_copy, line, sizeof(line_copy) - 1);
+  line_copy[sizeof(line_copy) - 1] = '\0';
+  
+  // Убираем перевод строки
+  line_copy[strcspn(line_copy, "\n")] = 0;
+  
+  // Проверяем, есть ли квадратные скобки
+  if (line_copy[0] == '[') {
+    // Формат: [IPv6]:port
+    char* closing_bracket = strchr(line_copy, ']');
+    if (closing_bracket == NULL) {
+      return 0;  // Нет закрывающей скобки
+    }
+    
+    // Копируем IP (без скобок)
+    *closing_bracket = '\0';
+    strncpy(server->ip, line_copy + 1, sizeof(server->ip) - 1);
+    
+    // Проверяем двоеточие после скобки
+    if (closing_bracket[1] != ':') {
+      return 0;  // Нет двоеточия после скобки
+    }
+    
+    server->port = atoi(closing_bracket + 2);
+  } else {
+    // Формат без скобок: IPv6:port
+    // Находим последнее двоеточие (в IPv6 много двоеточий)
+    char* last_colon = strrchr(line_copy, ':');
+    if (last_colon == NULL) {
+      return 0;  // Нет двоеточия
+    }
+    
+    // Разделяем IP и порт
+    *last_colon = '\0';
+    strncpy(server->ip, line_copy, sizeof(server->ip) - 1);
+    server->port = atoi(last_colon + 1);
+  }
+  
+  return (server->port > 0 && server->port <= 65535);
+}
 
 
 int main(int argc, char **argv) {
@@ -171,18 +213,12 @@ int main(int argc, char **argv) {
   char line[255];
   
   while (fgets(line, sizeof(line), file) != NULL && servers_num < 100) {
-    line[strcspn(line, "\n")] = 0;
-    
-    char* colon = strchr(line, ':');
-    if (colon != NULL) {
-      *colon = '\0';
-      strncpy(servers[servers_num].ip, line, sizeof(servers[servers_num].ip) - 1);
-      servers[servers_num].port = atoi(colon + 1);
-      if (servers[servers_num].port > 0) {
-        servers_num++;
-      }
-    }
+  if (parse_ipv6_server(line, &servers[servers_num])) {
+    printf("Server %d: %s:%d\n", 
+           servers_num, servers[servers_num].ip, servers[servers_num].port);
+    servers_num++;
   }
+}
   fclose(file);
 
   if (servers_num == 0) {
