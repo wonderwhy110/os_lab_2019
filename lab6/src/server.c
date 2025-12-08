@@ -7,20 +7,17 @@
 
 #include <getopt.h>
 #include <netinet/in.h>
-#include <netinet/ip.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 
 #include "pthread.h"
-#include "common.h"  // Добавляем заголовок библиотеки
+#include "common.h"
 
 struct FactorialArgs {
   uint64_t begin;
   uint64_t end;
   uint64_t mod;
 };
-
-// Функция MultModulo теперь в common.c
 
 uint64_t Factorial(const struct FactorialArgs *args) {
   uint64_t ans = 1;
@@ -67,19 +64,27 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  int server_fd = socket(AF_INET, SOCK_STREAM, 0);
+  // СОЗДАНИЕ IPv6 СЕРВЕРНОГО СОКЕТА
+  int server_fd = socket(AF_INET6, SOCK_STREAM, 0);  // <-- ИЗМЕНЕНИЕ 1
   if (server_fd < 0) {
     fprintf(stderr, "Can not create server socket!");
     return 1;
   }
 
-  struct sockaddr_in server;
-  server.sin_family = AF_INET;
-  server.sin_port = htons((uint16_t)port);
-  server.sin_addr.s_addr = htonl(INADDR_ANY);
+  // НАСТРОЙКА DUAL-STACK (поддержка IPv4 и IPv6 одновременно)
+  int no = 0;
+  setsockopt(server_fd, IPPROTO_IPV6, IPV6_V6ONLY, &no, sizeof(no));  // <-- ИЗМЕНЕНИЕ 2
 
+  // НАСТРОЙКА REUSEADDR (как и раньше)
   int opt_val = 1;
   setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt_val, sizeof(opt_val));
+
+  // СОЗДАНИЕ IPv6 АДРЕСА СЕРВЕРА
+  struct sockaddr_in6 server;  // <-- ИЗМЕНЕНИЕ 3
+  memset(&server, 0, sizeof(server));
+  server.sin6_family = AF_INET6;  // <-- ИЗМЕНЕНИЕ 4
+  server.sin6_port = htons((uint16_t)port);
+  server.sin6_addr = in6addr_any;  // <-- ИЗМЕНЕНИЕ 5 (вместо INADDR_ANY)
 
   int err = bind(server_fd, (struct sockaddr *)&server, sizeof(server));
   if (err < 0) {
@@ -93,10 +98,10 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  printf("Server listening at %d\n", port);
+  printf("Server listening at port %d (IPv6)\n", port);
 
   while (true) {
-    struct sockaddr_in client;
+    struct sockaddr_in6 client;  // <-- ИЗМЕНЕНИЕ 6
     socklen_t client_len = sizeof(client);
     int client_fd = accept(server_fd, (struct sockaddr *)&client, &client_len);
 
@@ -104,6 +109,12 @@ int main(int argc, char **argv) {
       fprintf(stderr, "Could not establish new connection\n");
       continue;
     }
+
+    // ВЫВОД ИНФОРМАЦИИ О КЛИЕНТЕ (IPv6)
+    char client_ip[INET6_ADDRSTRLEN];  // <-- ИЗМЕНЕНИЕ 7
+    inet_ntop(AF_INET6, &client.sin6_addr, client_ip, sizeof(client_ip));
+    printf("Client connected from [%s]:%d\n", 
+           client_ip, ntohs(client.sin6_port));
 
     while (true) {
       unsigned int buffer_size = sizeof(uint64_t) * 3;
