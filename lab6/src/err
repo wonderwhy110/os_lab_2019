@@ -1,33 +1,8 @@
-make
-gcc -Wall -Wextra -std=gnu99 -pedantic -c client.c -o client.o
-gcc -Wall -Wextra -std=gnu99 -pedantic -c common.c -o common.o
-In file included from common.c:1:
-common.h:7:1: error: unknown type name ‘bool’
-    7 | bool ConvertStringToUI64(const char *str, uint64_t *val);
-      | ^~~~
-common.h:5:1: note: ‘bool’ is defined in header ‘<stdbool.h>’; did you forget to ‘#include <stdbool.h>’?
-    4 | #include <stdint.h>
-  +++ |+#include <stdbool.h>
-    5 | 
-common.c:17:1: error: unknown type name ‘bool’
-   17 | bool ConvertStringToUI64(const char *str, uint64_t *val) {
-      | ^~~~
-common.c:4:1: note: ‘bool’ is defined in header ‘<stdbool.h>’; did you forget to ‘#include <stdbool.h>’?
-    3 | #include <stdlib.h>
-  +++ |+#include <stdbool.h>
-    4 | 
-common.c: In function ‘ConvertStringToUI64’:
-common.c:21:12: error: ‘false’ undeclared (first use in this function)
-   21 |     return false;
-      |            ^~~~~
-common.c:21:12: note: ‘false’ is defined in header ‘<stdbool.h>’; did you forget to ‘#include <stdbool.h>’?
-common.c:21:12: note: each undeclared identifier is reported only once for each function it appears in
-common.c:28:10: error: ‘true’ undeclared (first use in this function)
-   28 |   return true;
-      |          ^~~~
-common.c:28:10: note: ‘true’ is defined in header ‘<stdbool.h>’; did you forget to ‘#include <stdbool.h>’?
-common.c:29:1: warning: control reaches end of non-void function [-Wreturn-type]
-   29 | }
-      | ^
-make: *** [makefile:42: common.o] Ошибка 1
+Found 2 servers
+Server 0: 127.0.0.1:20004 - range 1 to 4
+Server 1: 192.168.1.100:20005 - range 5 to 7
+getaddrinfo failed for 127.0.0.1:20004: Address family for hostname not supported
+getaddrinfo failed for 192.168.1.100:20005: Address family for hostname not supported
+
+Final result: 7! mod 100 = 1
 
